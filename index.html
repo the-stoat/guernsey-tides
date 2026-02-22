@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>St Peter Port · Tides</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sea-deep: #0a1628;
+    --sea-mid: #0d2240;
+    --sea-light: #1a3a5c;
+    --water: #1e5f8e;
+    --foam: #4db8e8;
+    --foam-light: #8fd4f0;
+    --sand: #e8d5b0;
+    --sand-dark: #c4a96d;
+    --gold: #f0b429;
+    --text: #e8f4fc;
+    --text-dim: #7aa8c4;
+    --border: rgba(77,184,232,0.2);
+  }
+
+  body {
+    background: var(--sea-deep);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Animated ocean background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 120% 60% at 50% 100%, rgba(14,58,100,0.8) 0%, transparent 70%),
+      radial-gradient(ellipse 80% 40% at 20% 80%, rgba(0,80,140,0.4) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 40% at 80% 70%, rgba(0,60,120,0.3) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--d, 3s) ease-in-out infinite alternate;
+  }
+
+  @keyframes twinkle {
+    0% { opacity: var(--min, 0.2); transform: scale(1); }
+    100% { opacity: var(--max, 0.8); transform: scale(1.2); }
+  }
+
+  /* Wave animation */
+  .waves {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .wave {
+    position: absolute;
+    bottom: 0;
+    left: -100%;
+    width: 300%;
+    height: 100%;
+    opacity: 0.15;
+  }
+
+  .wave svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .wave1 { animation: wave-move 8s linear infinite; fill: var(--foam); }
+  .wave2 { animation: wave-move 12s linear infinite reverse; fill: var(--foam-light); opacity: 0.08; }
+
+  @keyframes wave-move {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(33.333%); }
+  }
+
+  /* Layout */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 24px 120px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .location-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--foam);
+    margin-bottom: 8px;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  /* Input card */
+  .card {
+    background: rgba(13, 34, 64, 0.7);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    backdrop-filter: blur(12px);
+    margin-bottom: 24px;
+  }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+    letter-spacing: 0.05em;
+  }
+
+  .inputs-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  label {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--foam);
+    opacity: 0.7;
+  }
+
+  input[type="date"],
+  input[type="time"] {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(77,184,232,0.3);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    width: 100%;
+    color-scheme: dark;
+  }
+
+  input[type="date"]:focus,
+  input[type="time"]:focus {
+    border-color: var(--foam);
+    background: rgba(77,184,232,0.08);
+  }
+
+  .btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--water), #1a6fa8);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 15px 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .btn:hover::before { opacity: 1; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(30,95,142,0.5); }
+  .btn:active { transform: translateY(0); }
+
+  /* Result */
+  .result-card {
+    background: rgba(13, 34, 64, 0.8);
+    border: 1px solid rgba(77,184,232,0.3);
+    border-radius: 16px;
+    padding: 32px;
+    backdrop-filter: blur(12px);
+    margin-bottom: 24px;
+    animation: fadeIn 0.4s ease;
+    display: none;
+  }
+
+  .result-card.visible { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .height-display {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 10vw, 5.5rem);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--foam);
+    text-shadow: 0 0 40px rgba(77,184,232,0.4);
+  }
+
+  .height-unit {
+    font-size: 20px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-weight: 300;
+  }
+
+  .tide-status {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid;
+    align-self: center;
+  }
+
+  .tide-status.rising {
+    color: #5ee8a0;
+    border-color: rgba(94,232,160,0.4);
+    background: rgba(94,232,160,0.08);
+  }
+
+  .tide-status.falling {
+    color: #f0b429;
+    border-color: rgba(240,180,41,0.4);
+    background: rgba(240,180,41,0.08);
+  }
+
+  .result-meta {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 28px;
+  }
+
+  /* Tide bar */
+  .tide-bar-container {
+    margin-bottom: 28px;
+  }
+
+  .tide-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .tide-bar-track {
+    height: 8px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .tide-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #1a6fa8, var(--foam));
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+
+  .tide-bar-fill::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--foam);
+    box-shadow: 0 0 8px var(--foam);
+  }
+
+  /* High/Low info */
+  .tide-extremes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .extreme-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+
+  .extreme-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .extreme-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--text);
+  }
+
+  .extreme-time {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  /* Chart */
+  .chart-card {
+    background: rgba(13, 34, 64, 0.7);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    backdrop-filter: blur(12px);
+    display: none;
+  }
+
+  .chart-card.visible { display: block; }
+
+  .chart-label {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  canvas {
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  /* Disclaimer */
+  .disclaimer {
+    margin-top: 24px;
+    font-size: 10px;
+    color: rgba(122,168,196,0.5);
+    text-align: center;
+    line-height: 1.6;
+    letter-spacing: 0.05em;
+  }
+
+  @media (max-width: 480px) {
+    .inputs-row { grid-template-columns: 1fr; }
+    .tide-extremes { grid-template-columns: 1fr; }
+    .card { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<!-- Waves -->
+<div class="waves">
+  <div class="wave wave1">
+    <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+      <path d="M0,60 C150,90 350,20 600,60 C850,100 1050,30 1200,60 L1200,120 L0,120 Z"/>
+    </svg>
+  </div>
+  <div class="wave wave2">
+    <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+      <path d="M0,40 C200,80 400,10 600,50 C800,90 1000,20 1200,40 L1200,120 L0,120 Z"/>
+    </svg>
+  </div>
+</div>
+
+<div class="container">
+  <header>
+    <div class="location-label">49.455°N  2.536°W  ·  Channel Islands</div>
+    <h1>St Peter Port</h1>
+    <div class="subtitle">Tide Heights · Guernsey</div>
+  </header>
+
+  <div class="card">
+    <div class="card-title">Enter a date and time to calculate the tide height</div>
+    <div class="inputs-row">
+      <div class="input-group">
+        <label>Date</label>
+        <input type="date" id="dateInput">
+      </div>
+      <div class="input-group">
+        <label>Time (local)</label>
+        <input type="time" id="timeInput">
+      </div>
+    </div>
+    <button class="btn" onclick="calculate()">Calculate Tide Height</button>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <div class="height-display" id="heightDisplay">—</div>
+      <div class="height-unit">metres</div>
+      <div class="tide-status" id="tideStatus"></div>
+    </div>
+    <div class="result-meta" id="resultMeta"></div>
+
+    <div class="tide-bar-container">
+      <div class="tide-bar-labels">
+        <span>Low <span id="lowLabel">—</span>m</span>
+        <span>High <span id="highLabel">—</span>m</span>
+      </div>
+      <div class="tide-bar-track">
+        <div class="tide-bar-fill" id="tideBar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="tide-extremes">
+      <div class="extreme-box">
+        <div class="extreme-label">↑ Next High Tide</div>
+        <div class="extreme-value" id="nextHigh">—</div>
+        <div class="extreme-time" id="nextHighTime">—</div>
+      </div>
+      <div class="extreme-box">
+        <div class="extreme-label">↓ Next Low Tide</div>
+        <div class="extreme-value" id="nextLow">—</div>
+        <div class="extreme-time" id="nextLowTime">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-card" id="chartCard">
+    <div class="chart-label">24-Hour Tide Curve</div>
+    <canvas id="tideChart" height="180"></canvas>
+  </div>
+
+  <div class="disclaimer">
+    Predictions use harmonic tidal constituents for St Peter Port (NOC / NTSLF data).<br>
+    Not suitable for navigation. Always consult official Port of St Peter Port tide tables.
+  </div>
+</div>
+
+<script>
+// ─── St Peter Port Harmonic Tidal Constituents ───────────────────────────────
+// Source: National Oceanography Centre / UK National Tidal & Sea Level Facility
+// Amplitude in metres, phase lag (kappa) in degrees (GMT)
+// Mean Sea Level above Chart Datum: 5.00m (approx)
+// Chart Datum ≈ LAT for St Peter Port
+
+const MSL = 5.00; // mean sea level above chart datum
+
+const CONSTITUENTS = [
+  // name,  speed(°/hr),  amplitude(m),  phase(°)
+  // Major constituents for St Peter Port
+  { name: 'M2',  speed: 28.9841042,  H: 3.564,  g: 211.5 },
+  { name: 'S2',  speed: 30.0000000,  H: 1.068,  g: 255.0 },
+  { name: 'N2',  speed: 28.4397295,  H: 0.715,  g: 193.0 },
+  { name: 'K2',  speed: 30.0821373,  H: 0.274,  g: 261.0 },
+  { name: 'K1',  speed: 15.0410686,  H: 0.098,  g:  55.0 },
+  { name: 'O1',  speed: 13.9430356,  H: 0.088,  g:  10.0 },
+  { name: 'P1',  speed: 14.9589314,  H: 0.031,  g:  45.0 },
+  { name: 'Q1',  speed: 13.3986609,  H: 0.017,  g: 355.0 },
+  { name: 'MF',  speed:  1.0980331,  H: 0.038,  g: 230.0 },
+  { name: 'MM',  speed:  0.5443747,  H: 0.021,  g: 180.0 },
+  { name: '2N2', speed: 27.8953548,  H: 0.102,  g: 175.0 },
+  { name: 'MU2', speed: 27.9682084,  H: 0.055,  g: 192.0 },
+  { name: 'NU2', speed: 28.5125831,  H: 0.138,  g: 207.0 },
+  { name: 'L2',  speed: 29.5284789,  H: 0.110,  g: 234.0 },
+  { name: 'T2',  speed: 29.9589333,  H: 0.038,  g: 248.0 },
+  { name: 'M4',  speed: 57.9682084,  H: 0.195,  g:  68.0 },
+  { name: 'MS4', speed: 58.9841042,  H: 0.080,  g: 120.0 },
+  { name: 'M6',  speed: 86.9523127,  H: 0.038,  g: 150.0 },
+];
+
+// Reference epoch: J2000.0 = 1 Jan 2000 12:00:00 UTC
+// Equilibrium arguments (V0+u) at J2000.0 in degrees
+const V0U_J2000 = {
+  'M2':  244.0,
+  'S2':    0.0,
+  'N2':   82.0,
+  'K2':  184.8,
+  'K1':   94.8,
+  'O1':   57.0,
+  'P1':  280.0,
+  'Q1':  320.0,
+  'MF':   63.0,
+  'MM':  324.0,
+  '2N2': 160.0,
+  'MU2': 246.0,
+  'NU2': 264.0,
+  'L2':  247.0,
+  'T2':  357.0,
+  'M4':  128.0,
+  'MS4':  64.0,
+  'M6':    0.0,
+};
+
+function degToRad(d) { return d * Math.PI / 180; }
+
+/**
+ * Calculate tide height at a given Date (UTC)
+ */
+function tideHeight(date) {
+  // Hours since J2000.0 (1 Jan 2000 12:00 UTC)
+  const J2000 = Date.UTC(2000, 0, 1, 12, 0, 0);
+  const t = (date.getTime() - J2000) / 3600000; // hours
+
+  let h = MSL;
+
+  for (const c of CONSTITUENTS) {
+    const V0u = V0U_J2000[c.name] || 0;
+    // h += f * H * cos(speed*t + V0+u - g)  (f=1 simplified)
+    const arg = degToRad(c.speed * t + V0u - c.g);
+    h += c.H * Math.cos(arg);
+  }
+
+  return Math.max(0, h);
+}
+
+// ─── UI ──────────────────────────────────────────────────────────────────────
+
+// Set default date/time to now
+const now = new Date();
+document.getElementById('dateInput').value = now.toISOString().slice(0,10);
+const hh = String(now.getHours()).padStart(2,'0');
+const mm = String(now.getMinutes()).padStart(2,'0');
+document.getElementById('timeInput').value = `${hh}:${mm}`;
+
+function localDateToUTC(dateStr, timeStr) {
+  // Treat as Europe/Guernsey (UTC in winter, UTC+1 in summer)
+  // Approximation: BST runs last Sun March → last Sun October
+  const d = new Date(`${dateStr}T${timeStr}`);
+  // Check if BST (UTC+1)
+  const month = d.getMonth() + 1;
+  const bst = month > 3 && month < 10 ||
+    (month === 3 && lastSunday(d.getFullYear(), 3) <= d.getDate()) ||
+    (month === 10 && d.getDate() < lastSunday(d.getFullYear(), 10));
+  // Subtract offset to get UTC
+  const offsetMs = bst ? -3600000 : 0;
+  return new Date(d.getTime() + offsetMs);
+}
+
+function lastSunday(year, month) {
+  // Last Sunday of given month (1-indexed)
+  const d = new Date(year, month, 0); // last day of month
+  return d.getDate() - d.getDay();
+}
+
+function formatTime(date, bst) {
+  const d = bst ? new Date(date.getTime() + 3600000) : date;
+  return d.toUTCString().slice(17,22);
+}
+
+function isBST(date) {
+  const month = date.getMonth() + 1;
+  return month > 3 && month < 10 ||
+    (month === 3 && lastSunday(date.getFullYear(), 3) <= date.getDate()) ||
+    (month === 10 && date.getDate() < lastSunday(date.getFullYear(), 10));
+}
+
+function findExtremes(utcDate) {
+  // Sample at 5-minute intervals ±12 hours to find next high/low
+  const step = 5 * 60 * 1000;
+  let prev = tideHeight(new Date(utcDate.getTime() - step));
+  let curr = tideHeight(utcDate);
+  let nexts = [];
+
+  for (let i = 1; i <= 360 && nexts.length < 4; i++) {
+    const t = new Date(utcDate.getTime() + i * step);
+    const next = tideHeight(t);
+    if (curr > prev && curr > next) {
+      nexts.push({ type: 'high', time: utcDate.getTime() + (i-1) * step, h: curr });
+    } else if (curr < prev && curr < next) {
+      nexts.push({ type: 'low',  time: utcDate.getTime() + (i-1) * step, h: curr });
+    }
+    prev = curr; curr = next;
+  }
+  return nexts;
+}
+
+function isDeclining(utcDate) {
+  const step = 10 * 60 * 1000;
+  const before = tideHeight(new Date(utcDate.getTime() - step));
+  const after  = tideHeight(new Date(utcDate.getTime() + step));
+  return after < before;
+}
+
+let chartInstance = null;
+
+function calculate() {
+  const dateStr = document.getElementById('dateInput').value;
+  const timeStr = document.getElementById('timeInput').value;
+  if (!dateStr || !timeStr) return;
+
+  const utcDate = localDateToUTC(dateStr, timeStr);
+  const bst = isBST(utcDate);
+  const height = tideHeight(utcDate);
+  const falling = isDeclining(utcDate);
+  const extremes = findExtremes(utcDate);
+
+  // Heights for the day
+  const dayStart = new Date(utcDate);
+  dayStart.setUTCHours(0,0,0,0);
+  if (bst) dayStart.setTime(dayStart.getTime() - 3600000);
+
+  const MAX_H = 10.5; // chart datum reference (approx MHWS + margin)
+  const MIN_H = 0.0;
+
+  // Result display
+  document.getElementById('heightDisplay').textContent = height.toFixed(2);
+  document.getElementById('resultMeta').textContent =
+    `${new Date(utcDate).toLocaleDateString('en-GB', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}  ·  ${timeStr} ${bst ? 'BST' : 'GMT'}`;
+
+  const statusEl = document.getElementById('tideStatus');
+  statusEl.textContent = falling ? 'Falling' : 'Rising';
+  statusEl.className = 'tide-status ' + (falling ? 'falling' : 'rising');
+
+  // Bar
+  const nextHigh = extremes.find(e => e.type === 'high');
+  const nextLow  = extremes.find(e => e.type === 'low');
+  const hiH = nextHigh ? nextHigh.h : MAX_H;
+  const loH = nextLow  ? nextLow.h  : MIN_H;
+  const pct = Math.max(0, Math.min(100, ((height - loH) / (hiH - loH)) * 100));
+  document.getElementById('tideBar').style.width = pct + '%';
+  document.getElementById('lowLabel').textContent = loH.toFixed(1);
+  document.getElementById('highLabel').textContent = hiH.toFixed(1);
+
+  // Extremes
+  const fmt = (ts) => {
+    const d = new Date(ts);
+    const local = bst ? new Date(d.getTime() + 3600000) : d;
+    return local.toUTCString().slice(17,22) + ' ' + (bst ? 'BST' : 'GMT');
+  };
+  if (nextHigh) {
+    document.getElementById('nextHigh').textContent = nextHigh.h.toFixed(2) + ' m';
+    document.getElementById('nextHighTime').textContent = fmt(nextHigh.time);
+  }
+  if (nextLow) {
+    document.getElementById('nextLow').textContent = nextLow.h.toFixed(2) + ' m';
+    document.getElementById('nextLowTime').textContent = fmt(nextLow.time);
+  }
+
+  document.getElementById('resultCard').classList.add('visible');
+  document.getElementById('chartCard').classList.add('visible');
+
+  // Chart: 24h curve in 15min steps
+  drawChart(utcDate, bst, height);
+}
+
+function drawChart(utcDate, bst, currentHeight) {
+  const canvas = document.getElementById('tideChart');
+  const W = canvas.parentElement.clientWidth - 48;
+  const H = 180;
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Build data: midnight to midnight local
+  const localMidnight = new Date(utcDate);
+  localMidnight.setUTCHours(bst ? -1 : 0, 0, 0, 0);
+
+  const points = [];
+  const steps = 96; // 15-min intervals
+  for (let i = 0; i <= steps; i++) {
+    const t = new Date(localMidnight.getTime() + i * 15 * 60000);
+    points.push({ t, h: tideHeight(t) });
+  }
+
+  const MIN_H = 0;
+  const MAX_H = 10.5;
+  const PAD = { top: 20, right: 24, bottom: 36, left: 44 };
+  const cw = W - PAD.left - PAD.right;
+  const ch = H - PAD.top - PAD.bottom;
+
+  const xOf = (i) => PAD.left + (i / steps) * cw;
+  const yOf = (h) => PAD.top + ch - ((h - MIN_H) / (MAX_H - MIN_H)) * ch;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (let g = 0; g <= MAX_H; g += 2) {
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, yOf(g));
+    ctx.lineTo(W - PAD.right, yOf(g));
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(122,168,196,0.5)';
+    ctx.font = '9px DM Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(g + 'm', PAD.left - 6, yOf(g) + 3);
+  }
+
+  // X labels
+  ctx.fillStyle = 'rgba(122,168,196,0.5)';
+  ctx.font = '9px DM Mono, monospace';
+  ctx.textAlign = 'center';
+  for (let h = 0; h <= 24; h += 6) {
+    const xi = Math.round((h / 24) * steps);
+    ctx.fillText(String(h).padStart(2,'0') + ':00', xOf(xi), H - 10);
+  }
+
+  // Gradient fill under curve
+  const grad = ctx.createLinearGradient(0, PAD.top, 0, H - PAD.bottom);
+  grad.addColorStop(0, 'rgba(77,184,232,0.35)');
+  grad.addColorStop(1, 'rgba(77,184,232,0.02)');
+
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(points[0].h));
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i-1], curr = points[i];
+    const cpx = (xOf(i-1) + xOf(i)) / 2;
+    ctx.bezierCurveTo(cpx, yOf(prev.h), cpx, yOf(curr.h), xOf(i), yOf(curr.h));
+  }
+  ctx.lineTo(xOf(steps), H - PAD.bottom);
+  ctx.lineTo(xOf(0), H - PAD.bottom);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Curve line
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(points[0].h));
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i-1], curr = points[i];
+    const cpx = (xOf(i-1) + xOf(i)) / 2;
+    ctx.bezierCurveTo(cpx, yOf(prev.h), cpx, yOf(curr.h), xOf(i), yOf(curr.h));
+  }
+  ctx.strokeStyle = 'rgba(77,184,232,0.9)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Current time marker
+  const nowMinutes = (utcDate.getTime() - localMidnight.getTime()) / 60000;
+  const xi = (nowMinutes / (24 * 60)) * steps;
+  const xNow = xOf(xi);
+  const yNow = yOf(currentHeight);
+
+  // Vertical dashed line
+  ctx.beginPath();
+  ctx.setLineDash([4, 4]);
+  ctx.moveTo(xNow, PAD.top);
+  ctx.lineTo(xNow, H - PAD.bottom);
+  ctx.strokeStyle = 'rgba(240,180,41,0.6)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Dot
+  ctx.beginPath();
+  ctx.arc(xNow, yNow, 5, 0, Math.PI * 2);
+  ctx.fillStyle = '#f0b429';
+  ctx.fill();
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+// ─── Stars ────────────────────────────────────────────────────────────────────
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 60; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const size = Math.random() * 2 + 0.5;
+  s.style.cssText = `
+    width: ${size}px; height: ${size}px;
+    top: ${Math.random() * 60}%;
+    left: ${Math.random() * 100}%;
+    --d: ${2 + Math.random() * 4}s;
+    --min: ${0.1 + Math.random() * 0.3};
+    --max: ${0.5 + Math.random() * 0.5};
+    animation-delay: ${Math.random() * 4}s;
+  `;
+  starsEl.appendChild(s);
+}
+
+// Redraw chart on resize
+window.addEventListener('resize', () => {
+  const dateStr = document.getElementById('dateInput').value;
+  const timeStr = document.getElementById('timeInput').value;
+  if (dateStr && timeStr && document.getElementById('chartCard').classList.contains('visible')) {
+    calculate();
+  }
+});
+</script>
+</body>
+</html>
